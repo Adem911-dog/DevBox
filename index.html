@@ -5,15 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DevBox Pro - Arcade & Boîte à Outils</title>
     <!-- Manifest PWA pour rendre l'app installable -->
-    <link rel="manifest" href="data:application/manifest+json,{
-        &quot;name&quot;: &quot;DevBox Pro&quot;,
-        &quot;short_name&quot;: &quot;DevBox&quot;,
-        &quot;start_url&quot;: &quot;.&quot;,
-        &quot;display&quot;: &quot;standalone&quot;,
-        &quot;background_color&quot;: &quot;%230b0f19&quot;,
-        &quot;theme_color&quot;: &quot;%23111827&quot;,
-        &quot;icons&quot;: [{&quot;src&quot;: &quot;https://cdn-icons-png.flaticon.com/512/1006/1006771.png&quot;, &quot;sizes&quot;: &quot;512x512&quot;, &quot;type&quot;: &quot;image/png&quot;}]
-    }">
+    <link rel="manifest" href="manifest.json">
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
@@ -610,6 +602,15 @@
             initGuessGame();
             generateLorem(1);
         }
+
+        if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker enregistré avec succès !'))
+            .catch((err) => console.log('Échec enregistrement Service Worker:', err));
+    });
+}
     </script>
+
 </body>
 </html>
