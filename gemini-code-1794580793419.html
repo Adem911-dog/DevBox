@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevBox Pro - Arcade & Boîte à Outils</title>
+    <!-- Manifest PWA pour rendre l'app installable -->
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;DevBox Pro&quot;,
+        &quot;short_name&quot;: &quot;DevBox&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;%230b0f19&quot;,
+        &quot;theme_color&quot;: &quot;%23111827&quot;,
+        &quot;icons&quot;: [{&quot;src&quot;: &quot;https://cdn-icons-png.flaticon.com/512/1006/1006771.png&quot;, &quot;sizes&quot;: &quot;512x512&quot;, &quot;type&quot;: &quot;image/png&quot;}]
+    }">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col font-sans select-none">
+
+    <!-- WIDGET COULISSANT DU CRÉATEUR -->
+    <div id="creator-drawer" class="bg-[#111827] border-b border-indigo-500/30 overflow-hidden transition-all duration-300 max-h-0 shadow-2xl">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+            <span class="text-indigo-300 font-semibold flex items-center space-x-2 text-center sm:text-left">
+                <i class="fa-solid fa-crown text-amber-400"></i>
+                <span>Autres projets & sites du créateur :</span>
+            </span>
+            <div class="flex items-center space-x-3">
+                <a href="https://permavault.vercel.app/" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 px-3 py-1.5 rounded-xl border border-slate-700 text-xs transition flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-vault"></i><span>PermaVault</span>
+                </a>
+                <a href="https://gifhuub.netlify.app/" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 px-3 py-1.5 rounded-xl border border-slate-700 text-xs transition flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-photo-film"></i><span>GIFhub</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton Flèche Haut pour ouvrir/fermer le widget -->
+    <div class="bg-[#0f172a] border-b border-slate-800 text-center">
+        <button onclick="toggleCreatorDrawer()" id="drawer-toggle-btn" class="w-full py-1.5 text-xs text-slate-400 hover:text-indigo-400 transition flex items-center justify-center space-x-1.5 focus:outline-none">
+            <i id="drawer-icon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+            <span>Sites du créateur</span>
+        </button>
+    </div>
+
+    <!-- En-tête -->
+    <header class="bg-[#111827] border-b border-slate-800 px-4 sm:px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-500/20">
+                <i class="fa-solid fa-code text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold tracking-wide text-white">DevBox <span class="text-indigo-400 text-xs px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20">Mobile PWA</span></h1>
+                <p class="text-[11px] sm:text-xs text-slate-400">Outils & Arcade</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation par onglets (Glissable sur mobile) -->
+    <nav class="bg-[#0f172a] border-b border-slate-800/80 px-4 sm:px-6 py-2.5 flex items-center space-x-2 overflow-x-auto">
+        <button onclick="switchTab('games')" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-2 whitespace-nowrap bg-indigo-600 text-white shadow-sm" data-tab="games">
+            <i class="fa-solid fa-gamepad text-emerald-400"></i><span>Espace Jeux 🕹️</span>
+        </button>
+        <button onclick="switchTab('code')" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800/50" data-tab="code">
+            <i class="fa-solid fa-laptop-code text-indigo-400"></i><span>Outils Dev 💻</span>
+        </button>
+        <button onclick="switchTab('pwd')" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800/50" data-tab="pwd">
+            <i class="fa-solid fa-key"></i><span>Mots de passe</span>
+        </button>
+        <button onclick="switchTab('text')" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800/50" data-tab="text">
+            <i class="fa-solid fa-code"></i><span>Encodeurs</span>
+        </button>
+        <button onclick="switchTab('qrcode')" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800/50" data-tab="qrcode">
+            <i class="fa-solid fa-qrcode"></i><span>QR Code</span>
+        </button>
+        <button onclick="switchTab('json')" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800/50" data-tab="json">
+            <i class="fa-solid fa-brackets-curly"></i><span>JSON</span>
+        </button>
+        <button onclick="switchTab('hash')" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800/50" data-tab="hash">
+            <i class="fa-solid fa-shield-halved"></i><span>Hachage</span>
+        </button>
+    </nav>
+
+    <!-- Conteneur Principal -->
+    <main class="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full">
+
+        <!-- 1. ESPACE JEUX & ARCADE -->
+        <div id="tab-games" class="tool-panel space-y-6">
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6">
+                <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-800 pb-4">
+                    <h2 class="text-base sm:text-lg font-semibold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-dice text-emerald-400"></i>
+                        <span>Salle d'Arcade & Mini-Jeux</span>
+                    </h2>
+                    <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                        <button onclick="switchGame('hangman')" id="g-btn-hangman" class="game-selector-btn bg-indigo-600 text-white px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition">🔤 Pendu</button>
+                        <button onclick="switchGame('typing')" id="g-btn-typing" class="game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700">⌨️ Vitesse</button>
+                        <button onclick="switchGame('captcha')" id="g-btn-captcha" class="game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700">🤖 Captcha</button>
+                        <button onclick="switchGame('randomsite')" id="g-btn-randomsite" class="game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700">🌐 Sites</button>
+                        <button onclick="switchGame('clicker')" id="g-btn-clicker" class="game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700">⚡ Réflexes</button>
+                        <button onclick="switchGame('guess')" id="g-btn-guess" class="game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700">🎯 Juste Prix</button>
+                        <button onclick="switchGame('rps')" id="g-btn-rps" class="game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700">✂️ Schifoumi</button>
+                        <button onclick="switchGame('cookie')" id="g-btn-cookie" class="game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700">🍪 Cookie</button>
+                    </div>
+                </div>
+
+                <!-- JEU : LE PENDU -->
+                <div id="game-hangman" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-6">
+                    <div class="flex justify-between items-center text-xs text-slate-400">
+                        <span>Erreurs : <span id="hangman-errors" class="text-red-400 font-bold">0</span> / 6</span>
+                        <span>Mots : <span class="text-indigo-400 font-bold">10 000+</span></span>
+                    </div>
+                    <div class="font-mono text-xl sm:text-2xl tracking-widest text-indigo-300 bg-[#111827] py-4 rounded-xl border border-slate-800 overflow-x-auto" id="hangman-word-display">_ _ _ _</div>
+                    <div id="hangman-status" class="text-sm font-semibold text-slate-300">Devine le mot secret !</div>
+                    <div id="hangman-keyboard" class="flex flex-wrap justify-center gap-1.5 max-w-md mx-auto pt-2"></div>
+                    <button onclick="initHangman()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-medium transition border border-slate-700">Nouveau mot</button>
+                </div>
+
+                <!-- JEU : TEST DE VITESSE DE FRAPPE -->
+                <div id="game-typing" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-4 hidden">
+                    <h3 class="text-sm font-bold text-slate-300">Test de Vitesse de Frappe au Clavier</h3>
+                    <p class="text-xs text-slate-400">Tape le texte ci-dessous le plus vite possible :</p>
+                    <div id="typing-target-text" class="bg-[#111827] p-4 rounded-xl text-indigo-300 font-mono text-xs sm:text-sm tracking-wide select-text">
+                        le développement web est un art passionnant qui demande de la rigueur
+                    </div>
+                    <input type="text" id="typing-input" oninput="checkTyping()" placeholder="Commence à taper ici..." class="w-full bg-[#111827] border border-slate-800 rounded-xl px-4 py-3 text-slate-200 text-center focus:outline-none focus:border-indigo-500 text-sm font-mono">
+                    <div class="flex justify-center space-x-6 text-sm">
+                        <div>Temps : <span id="typing-time" class="font-bold text-indigo-400">0s</span></div>
+                        <div>Statut : <span id="typing-status" class="font-bold text-slate-400">En attente</span></div>
+                    </div>
+                    <button onclick="initTypingGame()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-medium border border-slate-700">Réinitialiser</button>
+                </div>
+
+                <!-- JEU : CAPTCHA -->
+                <div id="game-captcha" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-6 hidden">
+                    <div class="max-w-md mx-auto bg-[#111827] p-4 sm:p-6 rounded-2xl border border-slate-700 shadow-2xl space-y-4">
+                        <div class="flex items-center space-x-3 border-b border-slate-800 pb-3">
+                            <i class="fa-solid fa-robot text-indigo-400 text-2xl"></i>
+                            <div class="text-left">
+                                <h3 class="text-sm font-bold text-white">Vérification Anti-Robot</h3>
+                                <p class="text-xs text-slate-400">Sélectionne les images pertinentes</p>
+                            </div>
+                        </div>
+                        <div id="captcha-grid" class="grid grid-cols-3 gap-3"></div>
+                        <button onclick="verifyCaptcha()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium transition">Valider</button>
+                        <p id="captcha-result" class="text-xs font-bold text-slate-400"></p>
+                    </div>
+                </div>
+
+                <!-- JEU : SITES ALÉATOIRES -->
+                <div id="game-randomsite" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-6 hidden">
+                    <div class="max-w-lg mx-auto bg-[#111827] p-6 sm:p-8 rounded-2xl border border-slate-700 space-y-4">
+                        <div class="w-16 h-16 bg-indigo-500/10 text-indigo-400 rounded-full flex items-center justify-center mx-auto text-2xl border border-indigo-500/20">
+                            <i class="fa-solid fa-globe animate-spin" style="animation-duration: 8s;"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Explorateur de Sites Aléatoires</h3>
+                        <p class="text-xs text-slate-400">Découvre des sites web fascinants au hasard d'un clic !</p>
+                        <button onclick="openRandomSite()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl text-sm font-medium transition shadow-lg mx-auto flex items-center space-x-2">
+                            <i class="fa-solid fa-shuffle"></i><span>Explorer</span>
+                        </button>
+                        <p id="random-site-name" class="text-xs text-indigo-300 font-mono pt-2"></p>
+                    </div>
+                </div>
+
+                <!-- JEU : RÉFLEXES -->
+                <div id="game-clicker" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-4 hidden">
+                    <h3 class="text-sm font-bold text-slate-300">Test de Vitesse de Clic (10s)</h3>
+                    <div class="text-3xl font-extrabold text-indigo-400" id="clicker-score">0 clics</div>
+                    <p class="text-xs text-slate-400" id="clicker-timer">Temps restant : 10s</p>
+                    <div class="flex justify-center space-x-3">
+                        <button onclick="startClickerGame()" id="clicker-start-btn" class="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium">Démarrer</button>
+                        <button onclick="registerClick()" id="clicker-target-btn" disabled class="bg-indigo-600 opacity-50 text-white px-8 py-2.5 rounded-xl text-sm font-medium cursor-not-allowed">CLIQUER !</button>
+                    </div>
+                </div>
+
+                <!-- JEU : JUSTE PRIX -->
+                <div id="game-guess" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-4 hidden">
+                    <h3 class="text-sm font-bold text-slate-300">Devine un nombre entre 1 et 100</h3>
+                    <p class="text-xs text-slate-400" id="guess-msg">Tape ta proposition :</p>
+                    <div class="flex max-w-xs mx-auto space-x-2">
+                        <input type="number" id="guess-input" min="1" max="100" class="w-full bg-[#111827] border border-slate-800 rounded-xl px-4 py-2 text-center text-slate-200 text-sm">
+                        <button onclick="checkGuess()" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm">Tenter</button>
+                    </div>
+                    <button onclick="initGuessGame()" class="text-xs text-indigo-400 hover:underline">Recommencer</button>
+                </div>
+
+                <!-- JEU : SCHIFOUMI -->
+                <div id="game-rps" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-4 hidden">
+                    <h3 class="text-sm font-bold text-slate-300">Pierre - Papier - Ciseaux</h3>
+                    <div class="flex justify-around text-sm py-2">
+                        <div>Toi : <span id="rps-user-score" class="font-bold text-emerald-400">0</span></div>
+                        <div>IA : <span id="rps-ia-score" class="font-bold text-red-400">0</span></div>
+                    </div>
+                    <p class="text-xs text-indigo-300 font-medium" id="rps-result">Fais ton choix !</p>
+                    <div class="flex justify-center space-x-3 pt-2 flex-wrap gap-2">
+                        <button onclick="playRPS('pierre')" class="bg-slate-800 text-slate-200 px-4 py-2.5 rounded-xl text-sm border border-slate-700">✊ Pierre</button>
+                        <button onclick="playRPS('papier')" class="bg-slate-800 text-slate-200 px-4 py-2.5 rounded-xl text-sm border border-slate-700">📄 Papier</button>
+                        <button onclick="playRPS('ciseaux')" class="bg-slate-800 text-slate-200 px-4 py-2.5 rounded-xl text-sm border border-slate-700">✂️ Ciseaux</button>
+                    </div>
+                </div>
+
+                <!-- JEU : COOKIE -->
+                <div id="game-cookie" class="game-box bg-[#0b0f19] p-4 sm:p-6 rounded-xl border border-slate-800 text-center space-y-4 hidden">
+                    <h3 class="text-sm font-bold text-slate-300">Cookie Clicker Minimaliste</h3>
+                    <div class="text-3xl font-extrabold text-amber-400" id="cookie-count">0 cookies</div>
+                    <div class="flex justify-center py-4">
+                        <button onclick="clickCookie()" class="text-6xl transform active:scale-95 transition hover:scale-105">🍪</button>
+                    </div>
+                    <button onclick="buyCookieUpgrade()" class="bg-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs border border-slate-700">Amélioration (+1/clic) [Prix: <span id="cookie-cost">10</span>]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. OUTILS DEV & CODE -->
+        <div id="tab-code" class="tool-panel space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-file-lines text-indigo-400"></i>
+                        <span>Générateur de Texte Factice (Lorem Ipsum)</span>
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button onclick="generateLorem(1)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-xl text-slate-200 border border-slate-700">1 Paragraphe</button>
+                        <button onclick="generateLorem(3)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-xl text-slate-200 border border-slate-700">3 Paragraphes</button>
+                    </div>
+                    <textarea id="lorem-output" rows="5" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-300" placeholder="Le texte apparaîtra ici..."></textarea>
+                    <button onclick="copyToClipboard('lorem-output', 'Texte copié !')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-medium">Copier le texte</button>
+                </div>
+
+                <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-palette text-indigo-400"></i>
+                        <span>Convertisseur de Couleurs HEX ⇄ RGB</span>
+                    </h3>
+                    <div class="flex items-center space-x-3">
+                        <input type="color" id="color-picker" value="#6366f1" oninput="convertColor(this.value)" class="w-12 h-12 bg-transparent rounded-xl cursor-pointer border-0">
+                        <input type="text" id="color-hex-input" value="#6366f1" oninput="convertColor(this.value)" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 text-indigo-300 font-mono text-xs">
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-1">Résultat RGB :</span>
+                        <input type="text" id="color-rgb-output" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2 text-slate-300 font-mono text-xs">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MOT DE PASSE -->
+        <div id="tab-pwd" class="tool-panel space-y-6 hidden">
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+                <h2 class="text-base sm:text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                    <i class="fa-solid fa-key text-indigo-400"></i>
+                    <span>Générateur de Mot de Passe</span>
+                </h2>
+                <div class="relative mb-6">
+                    <input type="text" id="pwd-output" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-4 py-3.5 text-mono text-base sm:text-lg text-indigo-300 font-mono tracking-wider focus:outline-none">
+                    <button onclick="copyToClipboard('pwd-output', 'Mot de passe copié !')" class="absolute right-2.5 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition">Copier</button>
+                </div>
+                <button onclick="generatePassword()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-medium transition">Générer</button>
+            </div>
+        </div>
+
+        <!-- 4. ENCODEURS -->
+        <div id="tab-text" class="tool-panel space-y-6 hidden">
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Encodeurs / Décodeurs</h2>
+                <textarea id="text-input" rows="3" placeholder="Texte..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-4 text-slate-200 text-sm font-mono"></textarea>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="processText('b64-encode')" class="bg-slate-800 text-slate-200 py-2 px-4 rounded-xl text-xs">Base64 Encode</button>
+                    <button onclick="processText('b64-decode')" class="bg-slate-800 text-slate-200 py-2 px-4 rounded-xl text-xs">Base64 Decode</button>
+                </div>
+                <textarea id="text-output" rows="3" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-4 text-indigo-300 text-sm font-mono"></textarea>
+            </div>
+        </div>
+
+        <!-- 5. QR CODE AVEC TÉLÉCHARGEMENT -->
+        <div id="tab-qrcode" class="tool-panel space-y-6 hidden">
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Générateur & Téléchargeur de QR Code</h2>
+                <input type="text" id="qr-input" placeholder="https://..." oninput="generateQRCode()" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-4 py-3 text-slate-200 text-sm">
+                <div class="flex flex-col items-center justify-center p-6 bg-[#0b0f19] rounded-xl border border-slate-800 space-y-4">
+                    <div id="qrcode-container" class="bg-white p-4 rounded-xl flex items-center justify-center min-h-[150px] min-w-[150px]"></div>
+                    <button onclick="downloadQRCode()" id="qr-download-btn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-medium transition shadow-md flex items-center space-x-2">
+                        <i class="fa-solid fa-download"></i><span>Télécharger le QR Code (PNG)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. JSON -->
+        <div id="tab-json" class="tool-panel space-y-6 hidden">
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                <h2 class="text-base sm:text-lg font-semibold text-white">JSON Formatter</h2>
+                <textarea id="json-input" rows="4" class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-4 text-slate-200 text-sm font-mono" placeholder='{"test":true}'></textarea>
+                <button onclick="formatJSON()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm">Embellir</button>
+                <textarea id="json-output" rows="4" readonly class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl p-4 text-emerald-400 text-sm font-mono"></textarea>
+            </div>
+        </div>
+
+        <!-- 7. HASH -->
+        <div id="tab-hash" class="tool-panel space-y-6 hidden">
+            <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Hachage MD5 / SHA-256</h2>
+                <input type="text" id="hash-input" oninput="calculateHashes()" placeholder="Texte..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-4 py-3 text-slate-200 text-sm">
+                <input type="text" id="hash-md5" readonly placeholder="MD5..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-4 py-2 text-indigo-300 text-xs font-mono">
+                <input type="text" id="hash-sha256" readonly placeholder="SHA-256..." class="w-full bg-[#0b0f19] border border-slate-800 rounded-xl px-4 py-2 text-indigo-300 text-xs font-mono">
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-indigo-600 text-white px-5 py-3 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 z-50 text-sm font-medium">
+        Copié !
+    </div>
+
+    <!-- Script Application -->
+    <script>
+        // Enregistrement du Service Worker pour le PWA (téléchargeable sur Google)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript,').catch(() => {});
+            });
+        }
+
+        function toggleCreatorDrawer() {
+            const drawer = document.getElementById('creator-drawer');
+            const icon = document.getElementById('drawer-icon');
+            if (drawer.style.maxHeight && drawer.style.maxHeight !== '0px') {
+                drawer.style.maxHeight = '0px';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                drawer.style.maxHeight = '140px';
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tool-panel').forEach(panel => panel.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/50');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/50');
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 2500);
+        }
+
+        function copyToClipboard(elementId, msg) {
+            const el = document.getElementById(elementId);
+            el.select();
+            document.execCommand('copy');
+            showToast(msg);
+        }
+
+        // --- GÉNÉRATEUR & TÉLÉCHARGEMENT QR CODE ---
+        let qrInstance = null;
+        function generateQRCode() {
+            const val = document.getElementById('qr-input').value.trim();
+            const container = document.getElementById('qrcode-container');
+            const downloadBtn = document.getElementById('qr-download-btn');
+            container.innerHTML = '';
+            if(!val) {
+                downloadBtn.classList.add('hidden');
+                return;
+            }
+            qrInstance = new QRCode(container, { text: val, width: 160, height: 160 });
+            downloadBtn.classList.remove('hidden');
+        }
+
+        function downloadQRCode() {
+            const img = document.querySelector('#qrcode-container img');
+            const canvas = document.querySelector('#qrcode-container canvas');
+            let imageUrl = "";
+            if(img && img.src) {
+                imageUrl = img.src;
+            } else if(canvas) {
+                imageUrl = canvas.toDataURL("image/png");
+            }
+            if(imageUrl) {
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = 'qrcode.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('QR Code téléchargé !');
+            }
+        }
+
+        // --- OUTILS DEV & CODE ---
+        function generateLorem(paragraphs) {
+            const lorems = [
+                "Le Lorem Ipsum est simplement du faux texte employé dans la composition et la mise en page avant impression. Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500.",
+                "De nos jours, de nombreux logiciels de mise en page ou éditeurs de texte font du Lorem Ipsum leur texte par défaut, et une recherche pour 'lorem ipsum' permettra de trouver de nombreux sites web encore à l'état fœtal.",
+                "Plusieurs versions ont été inventées au fil du temps, parfois par accident, souvent intentionnellement (histoire d'y injecter de l'humour et autres petites fantaisies)."
+            ];
+            let res = [];
+            for(let i=0; i<paragraphs; i++) { res.push(lorems[i % lorems.length]); }
+            document.getElementById('lorem-output').value = res.join('\n\n');
+        }
+
+        function convertColor(val) {
+            let hex = val;
+            if(!hex.startsWith('#') && hex.length === 6) hex = '#' + hex;
+            if(/^#[0-9A-F]{6}$/i.test(hex)) {
+                document.getElementById('color-hex-input').value = hex;
+                document.getElementById('color-picker').value = hex;
+                let bigint = parseInt(hex.slice(1), 16);
+                let r = (bigint >> 16) & 255;
+                let g = (bigint >> 8) & 255;
+                let b = bigint & 255;
+                document.getElementById('color-rgb-output').value = `rgb(${r}, ${g}, ${b})`;
+            }
+        }
+
+        // --- MINI-JEUX ARCADE ---
+        function switchGame(gameId) {
+            document.querySelectorAll('.game-box').forEach(b => b.classList.add('hidden'));
+            document.querySelectorAll('.game-selector-btn').forEach(btn => {
+                btn.className = 'game-selector-btn bg-slate-800 text-slate-300 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition border border-slate-700';
+            });
+            document.getElementById(`game-${gameId}`).classList.remove('hidden');
+            document.getElementById(`g-btn-${gameId}`).className = 'game-selector-btn bg-indigo-600 text-white px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold transition';
+            if(gameId === 'hangman') initHangman();
+            if(gameId === 'captcha') initCaptcha();
+            if(gameId === 'typing') initTypingGame();
+        }
+
+        // Pendu
+        const wordList = ["DEVELOPPEMENT", "ORDINATEUR", "PROGRAMMATION", "JAVASCRIPT", "PYTHON", "ALGORITHME", "CLAVIER", "INTERNET", "RESEAU", "LOGICIEL", "CRYPTOGRAPHIE", "INTERFACE", "NAVIGATEUR", "SERVEUR", "CYBERSECURITE"];
+        let hangmanSecret = "", hangmanGuessed = [], hangmanErrors = 0;
+        function initHangman() {
+            hangmanSecret = wordList[Math.floor(Math.random() * wordList.length)];
+            hangmanGuessed = []; hangmanErrors = 0;
+            document.getElementById('hangman-errors').innerText = hangmanErrors;
+            document.getElementById('hangman-status').innerText = "Devine le mot secret !";
+            renderHangmanKeyboard(); renderHangmanWord();
+        }
+        function renderHangmanWord() {
+            let display = "", win = true;
+            for(let char of hangmanSecret) {
+                if(hangmanGuessed.includes(char)) { display += char + " "; }
+                else { display += "_ "; win = false; }
+            }
+            document.getElementById('hangman-word-display').innerText = display.trim();
+            if(win) document.getElementById('hangman-status').innerText = "🎉 Victoire ! C'était : " + hangmanSecret;
+        }
+        function renderHangmanKeyboard() {
+            const kb = document.getElementById('hangman-keyboard');
+            kb.innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').map(l => `
+                <button onclick="guessHangmanLetter('${l}')" id="h-btn-${l}" class="w-7 h-7 sm:w-8 sm:h-8 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-bold border border-slate-700">${l}</button>
+            `).join('');
+        }
+        function guessHangmanLetter(l) {
+            if(hangmanGuessed.includes(l) || hangmanErrors >= 6) return;
+            hangmanGuessed.push(l);
+            const btn = document.getElementById(`h-btn-${l}`);
+            btn.disabled = true; btn.classList.add('opacity-40');
+            if(!hangmanSecret.includes(l)) {
+                hangmanErrors++;
+                document.getElementById('hangman-errors').innerText = hangmanErrors;
+                if(hangmanErrors >= 6) document.getElementById('hangman-status').innerText = "❌ Perdu ! Mot : " + hangmanSecret;
+            }
+            renderHangmanWord();
+        }
+
+        // Test de Vitesse de Frappe
+        let typingStartTime = null;
+        function initTypingGame() {
+            document.getElementById('typing-input').value = "";
+            document.getElementById('typing-status').innerText = "En attente";
+            document.getElementById('typing-time').innerText = "0s";
+            typingStartTime = null;
+        }
+        function checkTyping() {
+            const target = document.getElementById('typing-target-text').innerText.trim();
+            const val = document.getElementById('typing-input').value.trim();
+            if(!typingStartTime) typingStartTime = new Date();
+            if(val === target) {
+                const seconds = ((new Date() - typingStartTime) / 1000).toFixed(1);
+                document.getElementById('typing-time').innerText = seconds + "s";
+                document.getElementById('typing-status').innerText = "🎉 Terminé avec succès !";
+            } else {
+                document.getElementById('typing-status').innerText = "En cours...";
+            }
+        }
+
+        // Captcha
+        function initCaptcha() {
+            const grid = document.getElementById('captcha-grid');
+            grid.innerHTML = ['💻', '🐱', '☕', '🐛', '🚀', '⚡', '🤖', '🔥', '📂'].map((icon, idx) => `
+                <div onclick="this.classList.toggle('border-indigo-500'); this.classList.toggle('bg-indigo-950/40')" class="h-16 bg-[#0b0f19] border border-slate-700 rounded-xl flex items-center justify-center text-2xl cursor-pointer">${icon}</div>
+            `).join('');
+            document.getElementById('captcha-result').innerText = "";
+        }
+        function verifyCaptcha() {
+            document.getElementById('captcha-result').innerText = "🎉 Validé avec succès !";
+            document.getElementById('captcha-result').className = "text-xs font-bold text-emerald-400";
+        }
+
+        // Sites Aléatoires
+        function openRandomSite() {
+            const sites = [
+                { name: "The Useless Web", url: "https://theuselessweb.com/" },
+                { name: "A Soft Murmur", url: "https://asoftmurmur.com/" },
+                { name: "Neal.fun", url: "https://neal.fun/" },
+                { name: "Window Swap", url: "https://www.window-swap.com/" }
+            ];
+            const s = sites[Math.floor(Math.random() * sites.length)];
+            document.getElementById('random-site-name').innerText = "Ouverture : " + s.name;
+            window.open(s.url, '_blank');
+        }
+
+        // Réflexes
+        let clickCount = 0, clickTimer = null, isPlayingClicker = false;
+        function startClickerGame() {
+            clickCount = 0; isPlayingClicker = true; let timeLeft = 10;
+            document.getElementById('clicker-score').innerText = '0 clics';
+            document.getElementById('clicker-start-btn').disabled = true;
+            const targetBtn = document.getElementById('clicker-target-btn');
+            targetBtn.disabled = false; targetBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            clearInterval(clickTimer);
+            clickTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('clicker-timer').innerText = `Temps restant : ${timeLeft}s`;
+                if(timeLeft <= 0) { clearInterval(clickTimer); isPlayingClicker = false; targetBtn.disabled = true; targetBtn.classList.add('opacity-50', 'cursor-not-allowed'); document.getElementById('clicker-start-btn').disabled = false; }
+            }, 1000);
+        }
+        function registerClick() { if(isPlayingClicker) { clickCount++; document.getElementById('clicker-score').innerText = `${clickCount} clics`; } }
+
+        // Juste Prix
+        let targetNum = 0;
+        function initGuessGame() { targetNum = Math.floor(Math.random() * 100) + 1; document.getElementById('guess-msg').innerText = "Nombre entre 1 et 100 choisi !"; }
+        function checkGuess() {
+            const val = parseInt(document.getElementById('guess-input').value);
+            const msg = document.getElementById('guess-msg');
+            if(val < targetNum) msg.innerText = `📈 ${val} est trop petit !`;
+            else if(val > targetNum) msg.innerText = `📉 ${val} est trop grand !`;
+            else msg.innerText = `🎉 Trouvé ! C'était ${targetNum} !`;
+        }
+
+        // Schifoumi
+        let userRPS = 0, iaRPS = 0;
+        function playRPS(userChoice) {
+            const choices = ['pierre', 'papier', 'ciseaux'];
+            const iaChoice = choices[Math.floor(Math.random() * 3)];
+            let resText = `Toi : ${userChoice} | IA : ${iaChoice} — `;
+            if(userChoice === iaChoice) resText += "Égalité ! 🤝";
+            else if((userChoice === 'pierre' && iaChoice === 'ciseaux') || (userChoice === 'papier' && iaChoice === 'pierre') || (userChoice === 'ciseaux' && iaChoice === 'papier')) { resText += "Tu gagnes ! 🎉"; userRPS++; }
+            else { resText += "L'IA gagne ! 🤖"; iaRPS++; }
+            document.getElementById('rps-user-score').innerText = userRPS;
+            document.getElementById('rps-ia-score').innerText = iaRPS;
+            document.getElementById('rps-result').innerText = resText;
+        }
+
+        // Cookie
+        let cookies = 0, cookiePower = 1, cookieCost = 10;
+        function clickCookie() { cookies += cookiePower; document.getElementById('cookie-count').innerText = cookies + " cookies"; }
+        function buyCookieUpgrade() { if(cookies >= cookieCost) { cookies -= cookieCost; cookiePower++; cookieCost = Math.floor(cookieCost * 1.8); document.getElementById('cookie-count').innerText = cookies + " cookies"; document.getElementById('cookie-cost').innerText = cookieCost; } }
+
+        // Utils
+        function generatePassword() {
+            let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$";
+            let pwd = ""; for(let i=0; i<16; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('pwd-output').value = pwd;
+        }
+        function processText(action) {
+            const input = document.getElementById('text-input').value;
+            try {
+                if(action === 'b64-encode') document.getElementById('text-output').value = btoa(input);
+                if(action === 'b64-decode') document.getElementById('text-output').value = atob(input);
+            } catch(e) { document.getElementById('text-output').value = "Erreur"; }
+        }
+        function formatJSON() {
+            try { document.getElementById('json-output').value = JSON.stringify(JSON.parse(document.getElementById('json-input').value), null, 2); } catch(e) { document.getElementById('json-output').value = "JSON Invalide"; }
+        }
+        function calculateHashes() {
+            const val = document.getElementById('hash-input').value;
+            document.getElementById('hash-md5').value = val ? CryptoJS.MD5(val).toString() : "";
+            document.getElementById('hash-sha256').value = val ? CryptoJS.SHA256(val).toString() : "";
+        }
+
+        window.onload = function() {
+            generatePassword();
+            initHangman();
+            initGuessGame();
+            generateLorem(1);
+        }
+    </script>
+</body>
+</html>
